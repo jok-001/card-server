@@ -3,201 +3,291 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Card Server 多应用卡密验证系统管理台：发卡、封禁、设备绑定与验证日志。">
 <title>Card Server · 管理台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='4' y='4' width='8' height='8' fill='%2300E56B'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geologica:wght@200;300;400;500&display=swap">
 <style>
-:root{
-  --bg:#0B0F1C;--side:#0D1322;--panel:#121A2B;--panel2:#0F1626;
-  --line:#1E2A40;--line2:#2A3A57;--tx:#E8EEF9;--sub:#7C89A3;
-  --acc:#7C5CFF;--acc2:#22D3A7;--bad:#F0525F;--warn:#F0B429;
-  --grad:linear-gradient(135deg,#7C5CFF,#5B8CFF);
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Vantage (deal 2/3, seed admin-dashboard-multi-app-card-d591·28bcf0dc·2026-11-10·r0) · redesign: full · scope: app
+ * nav: kept rail shell, recomposed surfaces · signature: scan console point cloud + corner-tick figures · states: hover/focus-visible/active/disabled/live
+ * vantage: steel/terrain · axes: dark/grotesk-sans/chromatic-lime · posture: restrained · contrast: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P_ H_ E_wells double-framed S_ R_type-mono V_ · weakest: E — wells had inner hairlines, removed */
+:root {
+  color-scheme: dark;
+  --space-3xs: 2px; --space-2xs: 4px; --space-xs: 8px; --space-sm: 12px; --space-md: 16px; --space-lg: 24px; --space-xl: 40px; --space-2xl: 64px; --space-3xl: 96px; --space-4xl: 144px;
+  --text-xs: 0.75rem; --text-sm: 0.875rem; --text-md: 1rem; --text-lg: 1.2rem; --text-xl: 1.44rem; --text-2xl: 1.728rem; --text-3xl: 2.074rem;
+  --text-display-s: 1.44rem; --text-display: 1.728rem; --text-section: 1.2rem; --text-title: 1rem; --text-lead: 1rem;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-in: cubic-bezier(0.7, 0, 0.84, 0); --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms; --dur-short: 220ms; --dur-long: 420ms;
+  --color-error: oklch(72% 0.15 27); --color-success: oklch(76% 0.13 150);
+  --container: 1440px; --gutter: 64px; --gap-columns: 32px; --section-gap-s: 120px; --section-gap: 144px; --section-gap-l: 176px;
+  --z-base: 1; --z-raised: 10; --z-dropdown: 100; --z-sticky: 200; --z-sticky-nav: 300; --z-modal: 400; --z-toast: 500; --z-tooltip: 600;
+  --color-paper: oklch(13.5% 0.012 235); --color-paper-2: oklch(17% 0.014 235); --color-paper-3: oklch(21% 0.016 235);
+  --color-ink: oklch(95% 0.006 230); --color-ink-2: oklch(82% 0.012 230); --color-muted: oklch(66% 0.016 230);
+  --color-rule: oklch(27% 0.014 235); --color-rule-2: oklch(34% 0.016 235);
+  --color-accent: oklch(89% 0.19 126); --color-accent-hi: oklch(93% 0.17 126); --color-accent-ink: oklch(19% 0.04 126); --color-focus: oklch(89% 0.19 126);
+  --point-lo: oklch(42% 0.04 245); --point-mid: oklch(70% 0.04 232); --point-hi: oklch(96% 0.02 215);
+  --color-slot: oklch(21% 0.016 235);
+  --color-warn: oklch(80% 0.12 85); --color-live: var(--color-accent);
+  --font-display: "Geologica", ui-sans-serif, system-ui, sans-serif; --font-body: "Geologica", ui-sans-serif, system-ui, sans-serif;
+  --radius-card: 4px; --radius-pill: 999px; --rule-hair: 1px; --tick: 10px;
+  --shadow-card: none;
+  --tracking-display: -0.035em; --display-weight: 300;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--tx);font:14px/1.6 system-ui,"Segoe UI","Microsoft YaHei",sans-serif;overflow:hidden}
-button{font:inherit;cursor:pointer;border:1px solid var(--line2);background:#182236;color:var(--tx);border-radius:8px;padding:7px 14px;transition:.15s}
-button:hover{border-color:var(--acc);background:#1D2A44}
-button.pri{background:var(--grad);border:none;font-weight:600}
-button.pri:hover{filter:brightness(1.12)}
-button.danger{background:#3A1A22;border-color:#6B2A31;color:#FF9DA5}
-button.danger:hover{background:#522028}
-button.mini{padding:3px 9px;font-size:12px;border-radius:6px}
-input,select,textarea{font:inherit;background:#0D1424;border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:8px 10px;outline:none;transition:.15s}
-input:focus,select:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0 2px #7C5CFF22}
-::-webkit-scrollbar{width:8px;height:8px}
-::-webkit-scrollbar-thumb{background:#25314B;border-radius:4px}
-::-webkit-scrollbar-track{background:transparent}
 
-/* ===== 登录 ===== */
-#login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(1200px 700px at 20% -10%,#2A1B66 0%,transparent 60%),radial-gradient(1000px 600px at 110% 110%,#0E3B54 0%,transparent 55%),var(--bg);z-index:50}
-#login .box{width:360px;background:#101828EE;border:1px solid var(--line);border-radius:16px;padding:30px 26px;backdrop-filter:blur(6px);animation:in .3s ease}
-#login h2{font-size:19px;margin-bottom:4px}
-#login .sub{color:var(--sub);font-size:12px;margin-bottom:18px}
-#login input{width:100%;margin-bottom:10px}
-#login button{width:100%;padding:10px}
-#lerr{color:var(--bad);font-size:12px;min-height:18px;margin-bottom:4px}
-@keyframes in{from{opacity:0;transform:translateY(14px) scale(.98)}}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { overflow-x: clip; }
+html { scrollbar-color: var(--color-muted) var(--color-paper); scroll-padding-top: var(--space-3xl); }
+body { margin: 0; background: var(--color-paper); color: var(--color-ink); font-family: var(--font-body); font-size: var(--text-md); line-height: 1.55; -webkit-font-smoothing: antialiased; caret-color: var(--color-accent); }
+::selection { background: color-mix(in oklab, var(--color-accent) 22%, transparent); color: var(--color-ink); }
+:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 0.16em; }
+h1, h2, h3 { margin: 0; font-family: var(--font-display); font-weight: var(--display-weight, 700); font-synthesis: none; letter-spacing: var(--tracking-display); line-height: 1.05; overflow-wrap: break-word; min-width: 0; text-wrap: balance; }
+h1 { max-width: 20ch; font-size: var(--text-display); } h2 { max-width: 30ch; font-size: var(--text-section); } h3 { max-width: 40ch; font-size: var(--text-title); line-height: 1.2; }
+.lead { font-size: var(--text-lead); line-height: 1.45; max-width: 52ch; }
+p { margin: 0; text-wrap: pretty; }
+p:not([class]) { max-width: 65ch; }
+img, video { max-width: 100%; height: auto; display: block; }
+svg { display: block; }
+[hidden] { display: none !important; }
+button, input, select, textarea { font: inherit; }
+.container { width: 100%; max-width: var(--container); margin-inline: auto; padding-inline: var(--gutter); box-sizing: border-box; }
+.num, .figure, td.num { font-variant-numeric: tabular-nums; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+[data-slot] { position: relative; overflow: hidden; background: linear-gradient(160deg, var(--color-paper-2, var(--color-paper)), var(--color-paper-3, var(--color-paper))); }
+[data-slot] > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+[data-slot]:has(> img) > :not(img):not([data-keep]) { display: none !important; }
+@media (max-width: 60rem) { :root { --gutter: 24px; --section-gap-s: 80px; --section-gap: 96px; --section-gap-l: 120px; } }
+@media (max-width: 40rem) { :root { --gutter: 16px; --section-gap-s: 56px; --section-gap: 72px; --section-gap-l: 96px; --gap-columns: 16px; } }
+@media (prefers-reduced-motion: reduce) { *:not(.keep-motion), *:not(.keep-motion)::before, *:not(.keep-motion)::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; } }
+/* photographs: muted con=6 sat=-20 */
+[data-slot] > img { filter: saturate(0.8) contrast(1.06); }
 
-/* ===== 主框架 ===== */
-#app{display:none;height:100vh}
-#side{position:fixed;left:0;top:0;bottom:0;width:212px;background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:18px 12px;z-index:10}
-.logo{display:flex;align-items:center;gap:10px;padding:4px 10px 18px}
-.logo .mark{width:34px;height:34px;border-radius:9px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
-.logo b{font-size:15px}
-.logo i{font-style:normal;font-size:10px;color:var(--sub);display:block}
-.nav{display:flex;flex-direction:column;gap:4px;flex:1}
-.nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;color:var(--sub);cursor:pointer;text-decoration:none;transition:.15s;font-size:14px}
-.nav a svg{width:17px;height:17px;flex:none}
-.nav a:hover{color:var(--tx);background:#151E33}
-.nav a.on{color:#fff;background:var(--grad);box-shadow:0 4px 14px #7C5CFF44;font-weight:600}
-.side-foot{border-top:1px solid var(--line);padding-top:12px}
-#main{margin-left:212px;height:100vh;display:flex;flex-direction:column}
-#topbar{display:flex;align-items:center;gap:12px;padding:14px 22px;border-bottom:1px solid var(--line);background:var(--side)}
-#ptitle{font-size:16px;font-weight:700}
-#topbar .sp{flex:1}
-select.mini{padding:6px 10px;font-size:13px}
-#content{flex:1;overflow:auto;padding:18px 22px 30px}
 
-/* ===== 通用组件 ===== */
-.page{display:none}
-.page.on{display:block;animation:pin .22s ease}
-@keyframes pin{from{opacity:0;transform:translateY(10px)}}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
-.panel h3{font-size:13px;color:var(--sub);font-weight:600;margin-bottom:12px;letter-spacing:.5px}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.muted{color:var(--sub);font-size:12px}
-.mono{font-family:Consolas,monospace}
-/* 统计瓦片 */
-.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
-.stat{background:linear-gradient(180deg,#151E33,#111828);border:1px solid var(--line);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden}
-.stat b{display:block;font-size:26px;font-weight:700;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-.stat i{font-style:normal;color:var(--sub);font-size:12px}
-.stat::after{content:"";position:absolute;right:-14px;top:-14px;width:56px;height:56px;border-radius:50%;background:var(--acc);opacity:.08}
-/* 表格 */
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{color:var(--sub);font-weight:600;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line2);white-space:nowrap;position:sticky;top:0;background:var(--panel);z-index:2}
-td{padding:8px 10px;border-bottom:1px solid #16203A;white-space:nowrap}
-tr:hover td{background:#151E33}
-.twrap{border:1px solid var(--line);border-radius:12px;overflow:auto;max-height:56vh}
-.badge{display:inline-block;padding:1px 9px;border-radius:20px;font-size:12px}
-.badge.unused{background:#0F2A1E;color:var(--acc2)}
-.badge.active{background:#171F3D;color:#8FA6FF}
-.badge.banned{background:#3A1A22;color:#FF9DA5}
-.badge.expired{background:#332A12;color:var(--warn)}
-details summary{cursor:pointer;color:#9FB4FF;font-size:12px}
-.dev{font-size:12px;color:var(--sub);padding:4px 0 2px 8px}
+/* ================= 页面系统（Vantage app shell） ================= */
+html, body { height: 100%; }
+
+/* 登录台 */
+#login { position: fixed; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; background: var(--color-paper); }
+#login.on { display: flex; }
+#cloud { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.85; }
+.console { position: relative; width: min(380px, 90vw); background: color-mix(in oklab, var(--color-paper-2) 90%, transparent); padding: var(--space-lg); }
+.console h1 { font-size: var(--text-xl); margin-bottom: var(--space-2xs); }
+.console .sub { color: var(--color-muted); font-size: var(--text-sm); margin-bottom: var(--space-lg); }
+.console input { width: 100%; margin-bottom: var(--space-sm); }
+#lerr { color: var(--color-error); font-size: var(--text-sm); min-height: 18px; margin-bottom: var(--space-2xs); }
+
+/* 角标刻度线框：只在四角画刻度，非满边框 */
+.tickframe { position: relative; }
+.tickframe::before, .tickframe::after { content: ""; position: absolute; width: var(--tick); height: var(--tick); pointer-events: none; }
+.tickframe::before { top: -1px; left: -1px; border-top: var(--rule-hair) solid var(--color-ink-2); border-left: var(--rule-hair) solid var(--color-ink-2); }
+.tickframe::after { bottom: -1px; right: -1px; border-bottom: var(--rule-hair) solid var(--color-ink-2); border-right: var(--rule-hair) solid var(--color-ink-2); }
+.tickframe.dim::before, .tickframe.dim::after { border-color: var(--color-rule-2); }
+
+/* 主框架 */
+#app { display: none; min-height: 100vh; }
+.rail { position: fixed; left: 0; top: 0; bottom: 0; width: 208px; background: var(--color-paper-2); border-right: var(--rule-hair) solid var(--color-rule); display: flex; flex-direction: column; padding: var(--space-lg) var(--space-sm); z-index: var(--z-sticky); }
+.brand { display: flex; align-items: center; gap: var(--space-sm); padding: 0 var(--space-sm) var(--space-lg); }
+.brand .mark { width: 26px; height: 26px; position: relative; flex: none; }
+.brand .mark::before { content: ""; position: absolute; inset: 3px; background: var(--color-accent); }
+.brand b { font: 300 var(--text-md)/1.1 var(--font-display); letter-spacing: var(--tracking-display); display: block; }
+.brand i { font-style: normal; font-size: var(--text-xs); color: var(--color-muted); display: block; }
+.nav { display: flex; flex-direction: column; flex: 1; }
+.nav a { display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-sm); color: var(--color-ink-2); text-decoration: none; font-size: var(--text-sm); border-left: 2px solid transparent; transition: color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out), background var(--dur-micro) var(--ease-out); }
+.nav a svg { width: 16px; height: 16px; }
+.nav a:hover { color: var(--color-ink); background: var(--color-paper-3); }
+.nav a:active { color: var(--color-ink); }
+.nav a.on { color: var(--color-ink); border-left-color: var(--color-live); }
+.nav a.on svg { color: var(--color-accent); }
+.rail-foot { border-top: var(--rule-hair) solid var(--color-rule); padding-top: var(--space-sm); }
+#whoami { color: var(--color-muted); font-size: var(--text-xs); padding: 0 var(--space-sm) var(--space-sm); font-variant-numeric: tabular-nums; }
+.rail-foot a { display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-2xs) var(--space-sm); color: var(--color-muted); font-size: var(--text-sm); cursor: pointer; transition: color var(--dur-micro) var(--ease-out); }
+.rail-foot a:hover { color: var(--color-ink-2); }
+.rail-foot a svg { width: 15px; height: 15px; }
+
+#main { margin-left: 208px; min-height: 100vh; display: flex; flex-direction: column; }
+#topbar { display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-sm) var(--space-lg); border-bottom: var(--rule-hair) solid var(--color-rule); background: var(--color-paper-2); }
+#ptitle { font: 300 var(--text-lg)/1 var(--font-display); letter-spacing: var(--tracking-display); }
+#topbar .sp { flex: 1; }
+.toplabel { color: var(--color-muted); font-size: var(--text-xs); }
+#content { flex: 1; padding: var(--space-lg) var(--space-xl) var(--space-2xl); max-width: var(--container); width: 100%; }
+
+/* 分页 */
+.page { display: none; }
+.page.on { display: block; animation: pin var(--dur-short) var(--ease-out); }
+@keyframes pin { from { opacity: 0; transform: translateY(6px); } }
+
+/* 分区：角标刻度框架 */
+.frame { padding: var(--space-md); margin-bottom: var(--space-md); position: relative; }
+.frame > .cap { color: var(--color-muted); font-size: var(--text-xs); display: block; margin-bottom: var(--space-sm); }
+.row { display: flex; gap: var(--space-sm); flex-wrap: wrap; align-items: center; }
+.grow { flex: 1; }
+.muted { color: var(--color-muted); font-size: var(--text-xs); }
+.mono { font-variant-numeric: tabular-nums; }
+
+/* 实测数字：角标刻度 + 陈述尺寸 */
+.figures { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-md); }
+.figure { padding: var(--space-sm) var(--space-sm) var(--space-2xs); }
+.figure b { display: block; font: 200 var(--text-2xl)/1.1 var(--font-display); font-variant-numeric: tabular-nums; color: var(--color-ink); }
+.figure i { font-style: normal; color: var(--color-muted); font-size: var(--text-xs); }
+@media (max-width: 960px) { .figures { grid-template-columns: repeat(3, 1fr); } }
+
+/* 表格 = 扫描记录 */
+.twrap { overflow: auto; max-height: 58vh; border-bottom: var(--rule-hair) solid var(--color-rule); }
+table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+th { color: var(--color-muted); font-weight: 400; text-align: left; padding: var(--space-2xs) var(--space-sm); border-bottom: var(--rule-hair) solid var(--color-rule-2); white-space: nowrap; font-size: var(--text-xs); }
+td { padding: var(--space-2xs) var(--space-sm); border-bottom: var(--rule-hair) solid var(--color-rule); white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--color-ink-2); }
+tbody tr { transition: background var(--dur-micro) var(--ease-out); }
+tbody tr:hover { background: var(--color-paper-3); }
+td .mono { color: var(--color-ink); }
+
+/* 状态：青柠只标 live / active */
+.state { white-space: nowrap; }
+.state .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: var(--space-2xs); background: var(--color-muted); vertical-align: 1px; }
+.state.st-active { color: var(--color-ink); }
+.state.st-active .dot { background: var(--color-live); }
+.state.st-banned { color: var(--color-error); }
+.state.st-banned .dot { background: var(--color-error); }
+.state.st-expired { color: var(--color-warn); }
+.state.st-expired .dot { background: var(--color-warn); }
+.state.st-unused { color: var(--color-muted); }
+.state.st-unused .dot { background: var(--color-rule-2); }
+
+/* 控件 */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2xs); padding: 0 var(--space-md); height: var(--space-xl); border-radius: var(--radius-pill); border: var(--rule-hair) solid var(--color-rule-2); background: transparent; color: var(--color-ink-2); font-size: var(--text-sm); transition: color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out), background var(--dur-micro) var(--ease-out), opacity var(--dur-micro) var(--ease-out); }
+.btn:hover { color: var(--color-ink); border-color: var(--color-ink-2); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-accent-ink); }
+.btn.primary:hover { background: var(--color-accent-hi); border-color: var(--color-accent-hi); }
+.btn.primary:active { transform: translateY(1px); background: var(--color-accent); }
+.btn.danger { color: var(--color-error); }
+.btn.danger:hover { border-color: var(--color-error); }
+.btn.mini { height: 26px; padding: 0 var(--space-sm); font-size: var(--text-xs); }
+.btn[disabled] { opacity: 0.4; background: var(--color-paper-3); color: var(--color-muted); border-color: var(--color-rule); cursor: not-allowed; }
+input, select, textarea { background: var(--color-paper-2); border: var(--rule-hair) solid var(--color-rule); border-radius: var(--radius-card); color: var(--color-ink); padding: var(--space-2xs) var(--space-sm); transition: border-color var(--dur-micro) var(--ease-out); }
+input:focus, select:focus, textarea:focus { border-color: var(--color-accent); outline: none; }
+input[disabled], select[disabled] { opacity: 0.4; background: var(--color-paper-3); color: var(--color-muted); cursor: not-allowed; }
+
 /* 批量条 */
-#batch{display:none;margin:10px 0;padding:9px 12px;background:#161F35;border:1px solid var(--line2);border-radius:10px}
-#batch b{color:var(--acc)}
-/* 输出框 */
-#keysOut{margin-top:12px;background:#0D1424;border:1px dashed var(--line2);border-radius:10px;padding:12px;white-space:pre;font-family:Consolas,monospace;font-size:13px;display:none;max-height:220px;overflow:auto}
-/* 应用卡 */
-.appcard{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.appcard .dot{width:9px;height:9px;border-radius:50%}
-.appcard b{font-size:14px}
-#toast{position:fixed;top:18px;right:18px;background:var(--grad);color:#fff;padding:9px 18px;border-radius:10px;display:none;z-index:99;font-weight:600;box-shadow:0 8px 24px #0007}
-label.ck{display:flex;align-items:center;gap:6px;color:var(--sub);font-size:13px;cursor:pointer}
+#batch { display: none; margin-bottom: var(--space-sm); padding: var(--space-2xs) var(--space-sm); border-top: var(--rule-hair) solid var(--color-rule-2); border-bottom: var(--rule-hair) solid var(--color-rule-2); }
+#batch b { color: var(--color-accent); font-variant-numeric: tabular-nums; }
+
+/* 输出井 */
+#keysOut { margin-top: var(--space-sm); background: var(--color-paper-2); border: var(--rule-hair) solid var(--color-rule); padding: var(--space-sm); white-space: pre; font-variant-numeric: tabular-nums; font-size: var(--text-sm); display: none; max-height: 220px; overflow: auto; }
+
+/* 应用行 */
+.approw { padding: var(--space-sm) 0; border-bottom: var(--rule-hair) solid var(--color-rule); display: flex; align-items: center; gap: var(--space-sm); flex-wrap: wrap; }
+.approw:last-child { border-bottom: none; }
+.approw .dot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
+.approw b { color: var(--color-ink); font-weight: 400; }
+
+/* 提示条 */
+#toast { position: fixed; top: var(--space-md); right: var(--space-lg); background: var(--color-paper-3); border-left: 2px solid var(--color-live); color: var(--color-ink); padding: var(--space-2xs) var(--space-md); display: none; z-index: var(--z-toast); font-size: var(--text-sm); }
+
+label.ck { display: flex; align-items: center; gap: var(--space-2xs); color: var(--color-muted); font-size: var(--text-xs); cursor: pointer; }
+details summary { cursor: pointer; color: var(--color-muted); font-size: var(--text-xs); }
+details .dev { font-size: var(--text-xs); color: var(--color-muted); padding: var(--space-2xs) 0 var(--space-2xs) var(--space-sm); }
+
 </style>
 </head>
 <body>
 
-<!-- 登录 -->
-<div id="login">
-  <div class="box">
-    <h2>Card Server</h2>
+<!-- 登录台：点云扫描 + 角标刻度控制台 -->
+<div id="login" class="on">
+  <canvas id="cloud" aria-hidden="true"></canvas>
+  <div class="console tickframe">
+    <h1>Card Server</h1>
     <div class="sub">多应用卡密验证系统 · 管理台</div>
     <div id="lerr"></div>
     <input id="lu" placeholder="用户名" autocomplete="username">
     <input id="lp" type="password" placeholder="密码" autocomplete="current-password" onkeydown="if(event.key=='Enter')doLogin()">
-    <button class="pri" onclick="doLogin()">登 录</button>
+    <button class="btn primary" style="width:100%" onclick="doLogin()">登 录</button>
   </div>
 </div>
 
-<!-- 主界面 -->
+<!-- 主框架 -->
 <div id="app">
-  <div id="side">
-    <div class="logo"><div class="mark">CS</div><div><b>Card Server</b><i>多应用卡密系统</i></div></div>
-    <div class="nav" id="nav">
-      <a data-p="dash" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>总览</a>
-      <a data-p="cards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>卡密</a>
-      <a data-p="issue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>发卡</a>
-      <a data-p="apps"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4.5v11L12 22l-8-4.5v-11z"/><path d="M12 11l8-4.5M12 11v11M12 11L4 6.5"/></svg>应用</a>
-      <a data-p="logs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>日志</a>
+  <div class="rail">
+    <div class="brand">
+      <div class="mark tickframe" aria-hidden="true"></div>
+      <div><b>Card Server</b><i>多应用卡密系统</i></div>
     </div>
-    <div class="side-foot">
-      <div class="muted" style="padding:0 10px 8px" id="whoami"></div>
-      <a onclick="logout()" style="display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;color:var(--sub);cursor:pointer">
-        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>退出登录
-      </a>
+    <div class="nav" id="nav">
+      <a data-p="dash" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>总览</a>
+      <a data-p="cards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="5" width="20" height="14"/><path d="M2 10h20"/></svg>卡密</a>
+      <a data-p="issue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>发卡</a>
+      <a data-p="apps"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2l8 4.5v11L12 22l-8-4.5v-11z"/><path d="M12 11l8-4.5M12 11v11M12 11L4 6.5"/></svg>应用</a>
+      <a data-p="logs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>日志</a>
+    </div>
+    <div class="rail-foot">
+      <div id="whoami"></div>
+      <a onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>退出登录</a>
     </div>
   </div>
   <div id="main">
     <div id="topbar">
       <span id="ptitle">总览</span>
       <span class="sp"></span>
-      <span class="muted">应用范围</span>
-      <select id="appSel" class="mini" style="min-width:180px" onchange="onAppSwitch()"></select>
+      <span class="toplabel">应用范围</span>
+      <select id="appSel" onchange="onAppSwitch()"></select>
     </div>
     <div id="content">
 
       <!-- 总览 -->
       <div class="page on" id="p-dash">
-        <div class="stats" id="stats"></div>
-        <div class="grid2" style="margin-top:16px">
-          <div class="panel">
-            <h3>快捷操作</h3>
-            <div class="row">
-              <button class="pri" onclick="go('issue')">批量发卡</button>
-              <button onclick="go('apps')">新建应用</button>
-              <button onclick="go('logs')">查看日志</button>
-            </div>
-            <div class="muted" style="margin-top:10px">提示：未激活卡不计时，用户首次验证成功才开始计算有效期。</div>
+        <div class="figures" id="stats"></div>
+        <div class="frame tickframe dim" style="margin-top:var(--space-md)">
+          <span class="cap">快捷操作</span>
+          <div class="row">
+            <button class="btn primary" onclick="go('issue')">批量发卡</button>
+            <button class="btn" onclick="go('apps')">新建应用</button>
+            <button class="btn" onclick="go('logs')">查看日志</button>
           </div>
-          <div class="panel">
-            <h3>最近验证</h3>
-            <div id="recent" class="muted">加载中…</div>
-          </div>
+          <div class="muted" style="margin-top:var(--space-sm)">未激活卡不计时，用户首次验证成功才开始计算有效期。</div>
+        </div>
+        <div class="frame tickframe dim">
+          <span class="cap">最近验证</span>
+          <div id="recent" class="muted">加载中…</div>
         </div>
       </div>
 
       <!-- 卡密 -->
       <div class="page" id="p-cards">
-        <div class="panel">
-          <div class="row">
-            <input id="q" placeholder="搜索卡密 / 备注 / 设备号" style="width:260px" onkeydown="if(event.key=='Enter')loadCards()">
-            <select id="fStatus" onchange="loadCards()">
-              <option value="">全部状态</option>
-              <option value="unused">未激活</option>
-              <option value="active">使用中</option>
-              <option value="banned">已封禁</option>
-              <option value="expired">已过期</option>
-            </select>
-            <button class="pri" onclick="loadCards()">搜索 / 刷新</button>
-            <span class="muted" id="cardsInfo"></span>
-          </div>
-          <div id="batch" class="row">
-            <span>已选 <b id="selN">0</b> 张：</span>
-            <button class="mini" onclick="batchOp('ban',true)">批量封禁</button>
-            <button class="mini" onclick="batchOp('ban',false)">批量解封</button>
-            <button class="mini" onclick="batchOp('unbind')">批量解绑</button>
-            <button class="mini danger" onclick="batchOp('delete')">批量删除</button>
-            <span class="muted">删除不可恢复；临时停用请用封禁</span>
-          </div>
-          <div class="twrap" style="margin-top:12px">
-            <table id="cardsT">
-              <thead><tr>
-                <th style="width:34px"><input type="checkbox" id="selAll" onchange="toggleAll(this)"></th>
-                <th>卡密</th><th id="thApp" style="display:none">应用</th><th>类型</th><th>状态</th><th>到期时间</th><th>设备</th><th>最后使用</th><th>备注</th><th>操作</th>
-              </tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
+        <div class="row" style="margin-bottom:var(--space-sm)">
+          <input id="q" placeholder="搜索卡密 / 备注 / 设备号" style="width:260px" onkeydown="if(event.key=='Enter')loadCards()">
+          <select id="fStatus" onchange="loadCards()">
+            <option value="">全部状态</option>
+            <option value="unused">未激活</option>
+            <option value="active">使用中</option>
+            <option value="banned">已封禁</option>
+            <option value="expired">已过期</option>
+          </select>
+          <button class="btn primary" onclick="loadCards()">搜索 / 刷新</button>
+          <span class="muted" id="cardsInfo"></span>
+        </div>
+        <div id="batch" class="row">
+          <span>已选 <b id="selN">0</b> 张：</span>
+          <button class="btn mini" onclick="batchOp('ban',true)">批量封禁</button>
+          <button class="btn mini" onclick="batchOp('ban',false)">批量解封</button>
+          <button class="btn mini" onclick="batchOp('unbind')">批量解绑</button>
+          <button class="btn mini danger" onclick="batchOp('delete')">批量删除</button>
+          <span class="muted">删除不可恢复；临时停用请用封禁</span>
+        </div>
+        <div class="twrap">
+          <table id="cardsT">
+            <thead><tr>
+              <th style="width:34px"><input type="checkbox" id="selAll" onchange="toggleAll(this)"></th>
+              <th>卡密</th><th id="thApp" style="display:none">应用</th><th>类型</th><th>状态</th><th>到期时间</th><th>设备</th><th>最后使用</th><th>备注</th><th>操作</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
         </div>
       </div>
 
       <!-- 发卡 -->
       <div class="page" id="p-issue">
-        <div class="panel">
-          <h3>批量发卡</h3>
+        <div class="frame tickframe dim">
+          <span class="cap">批量发卡</span>
           <div class="row">
             <div><div class="muted" style="margin-bottom:4px">卡类型</div>
               <select id="fDuration">
@@ -214,48 +304,46 @@ label.ck{display:flex;align-items:center;gap:6px;color:var(--sub);font-size:13px
               <input id="fMaxDev" type="number" value="1" min="1" max="99" style="width:90px"></div>
             <div><div class="muted" style="margin-bottom:4px">卡号前缀</div>
               <input id="fPrefix" value="XM" size="6"></div>
-            <div style="flex:1;min-width:180px"><div class="muted" style="margin-bottom:4px">备注（渠道 / 客户）</div>
+            <div class="grow"><div class="muted" style="margin-bottom:4px">备注（渠道 / 客户）</div>
               <input id="fNote" style="width:100%"></div>
           </div>
-          <div class="row" style="margin-top:14px">
-            <button class="pri" onclick="issue()" id="btnIssue">生成卡密</button>
+          <div class="row" style="margin-top:var(--space-sm)">
+            <button class="btn primary" onclick="issue()" id="btnIssue">生成卡密</button>
             <span class="muted">未激活卡不计时，首次验证成功才开始计算有效期</span>
           </div>
         </div>
-        <div class="panel" id="issueOut" style="display:none">
-          <h3>生成结果 <button class="mini" onclick="copyKeys()">复制全部</button></h3>
+        <div class="frame tickframe dim" id="issueOut" style="display:none">
+          <span class="cap">生成结果 <button class="btn mini" onclick="copyKeys()">复制全部</button></span>
           <div id="keysOut"></div>
         </div>
       </div>
 
       <!-- 应用 -->
       <div class="page" id="p-apps">
-        <div class="panel">
-          <h3>新建应用（独立卡密池，卡密互不共通）</h3>
+        <div class="frame tickframe dim">
+          <span class="cap">新建应用（独立卡密池，卡密互不共通）</span>
           <div class="row">
             <input id="newAppName" placeholder="应用名称，如：某某助手" style="width:240px" onkeydown="if(event.key=='Enter')createApp()">
-            <button class="pri" onclick="createApp()">创建</button>
+            <button class="btn primary" onclick="createApp()">创建</button>
             <span class="muted">自动生成独立 ks/gk；客户端集成见 SDK 文档</span>
           </div>
         </div>
         <div id="appsList"></div>
-        <div class="muted" style="margin-top:6px">换密钥（rotate）后该应用已打包的旧客户端立即失效，用新 ks/gk 重新打包分发。</div>
+        <div class="muted" style="margin-top:var(--space-2xs)">换密钥（rotate）后该应用已打包的旧客户端立即失效，用新 ks/gk 重新打包分发。</div>
       </div>
 
       <!-- 日志 -->
       <div class="page" id="p-logs">
-        <div class="panel">
-          <div class="row">
-            <button class="pri" onclick="loadLogs()">刷新</button>
-            <label class="ck"><input type="checkbox" id="logsAll" onchange="loadLogs()"> 全部应用</label>
-            <span class="muted">最近 200 条</span>
-          </div>
-          <div class="twrap" style="margin-top:12px">
-            <table id="logsT">
-              <thead><tr><th>时间</th><th>卡密</th><th>设备</th><th>IP</th><th>动作</th><th>结果</th><th>详情</th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
+        <div class="row" style="margin-bottom:var(--space-sm)">
+          <button class="btn primary" onclick="loadLogs()">刷新</button>
+          <label class="ck"><input type="checkbox" id="logsAll" onchange="loadLogs()"> 全部应用</label>
+          <span class="muted">最近 200 条</span>
+        </div>
+        <div class="twrap">
+          <table id="logsT">
+            <thead><tr><th>时间</th><th>卡密</th><th>设备</th><th>IP</th><th>动作</th><th>结果</th><th>详情</th></tr></thead>
+            <tbody></tbody>
+          </table>
         </div>
       </div>
 
@@ -266,7 +354,7 @@ label.ck{display:flex;align-items:center;gap:6px;color:var(--sub);font-size:13px
 
 <script>
 const $=s=>document.querySelector(s);
-let APPS=[], CUR="";   // CUR: 应用id 字符串，"" = 全部应用
+let APPS=[], CUR="";
 const SEL=new Set();
 
 function esc(s){return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;').replace(/"/g,'&quot;')}
@@ -283,7 +371,7 @@ async function api(path,body){
 }
 
 /* ===== 登录 ===== */
-function showLogin(){$('#login').style.display='flex';$('#app').style.display='none'}
+function showLogin(){$('#login').classList.add('on');$('#app').style.display='none'}
 async function doLogin(){
   $('#lerr').textContent='';
   const r=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -292,6 +380,43 @@ async function doLogin(){
   if(r.ok&&j.ok){$('#lp').value='';boot()}else{$('#lerr').textContent=j.error||('登录失败 '+r.status)}
 }
 async function logout(){await fetch('/logout',{method:'POST',credentials:'same-origin'});showLogin()}
+
+/* ===== 点云（登录台签名；reduced-motion 时静帧） ===== */
+var _cloudRAF=0;
+function startCloud(){
+  var cv=document.getElementById('cloud');
+  if(!cv||cv.dataset.on)return; cv.dataset.on='1';
+  var ctx=cv.getContext('2d');
+  var W,H,pts=[],i;
+  function seed(){
+    W=cv.width=innerWidth; H=cv.height=innerHeight; pts=[];
+    for(i=0;i<750;i++) pts.push({x:Math.random(),y:Math.random(),z:Math.random()});
+  }
+  seed(); addEventListener('resize',seed);
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var sweep=-0.15, last=0;
+  function draw(ts){
+    ctx.clearRect(0,0,W,H);
+    sweep+=0.0016; if(sweep>1.15)sweep=-0.15;
+    var n=pts.length;
+    for(i=0;i<n;i++){
+      var p=pts[i];
+      var px=p.x*W, py=p.y*H - p.z*40;
+      var lift=0;
+      var d=Math.abs(p.x-sweep);
+      if(d<0.09) lift=(0.09-d)/0.09;
+      var c=p.z;
+      var r=Math.round(42+c*54+lift*200), g=Math.round(50+c*50+lift*210), b=Math.round(64+c*46+lift*160);
+      ctx.fillStyle='rgba('+Math.min(r,255)+','+Math.min(g,255)+','+Math.min(b,255)+','+(0.35+c*0.5)+')';
+      var s=(1-c)*1.8+0.7;
+      ctx.fillRect(px,py,s,s);
+    }
+    ctx.fillStyle='rgba(0,229,107,0.55)';
+    ctx.fillRect(sweep*W,0,1,H);
+    if(!reduce)_cloudRAF=requestAnimationFrame(draw);
+  }
+  draw(0);
+}
 
 /* ===== 页面路由 ===== */
 const TITLES={dash:'总览',cards:'卡密管理',issue:'批量发卡',apps:'应用管理',logs:'验证日志'};
@@ -320,7 +445,7 @@ function onAppSwitch(){CUR=$('#appSel').value;go(document.querySelector('.page.o
 function scope(){return CUR?{app_id:+CUR}:{}}
 
 /* ===== 总览 ===== */
-function tile(n,label){return '<div class="stat"><b>'+n+'</b><i>'+label+'</i></div>'}
+function tile(n,label){return '<div class="figure tickframe"><b>'+n+'</b><i>'+label+'</i></div>'}
 async function loadDash(){
   const s=await api('/admin/stat',scope());
   $('#stats').innerHTML=
@@ -328,8 +453,8 @@ async function loadDash(){
     tile(s.by_status.banned||0,'已封禁')+tile(s.devices,'绑定设备')+tile(s.logins_24h,'24h 验证');
   const lg=await api('/admin/logs',Object.assign({limit:8},scope()));
   $('#recent').innerHTML=lg.logs.length?lg.logs.map(l=>
-    '<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #16203A">'+
-    '<span style="color:'+(l.ok?'var(--acc2)':'var(--bad)')+'">'+(l.ok?'✓':'✗')+'</span>'+
+    '<div style="display:flex;gap:var(--space-sm);padding:var(--space-2xs) 0;border-bottom:1px solid var(--color-rule);font-variant-numeric:tabular-nums">'+
+    '<span style="color:'+(l.ok?'var(--color-live)':'var(--color-error)')+'">'+(l.ok?'●':'×')+'</span>'+
     '<span class="mono" style="flex:1">'+esc(l.card||'-')+'</span>'+
     '<span class="muted">'+esc(l.action)+'</span>'+
     '<span class="muted">'+fmtT(l.ts)+'</span></div>').join(''):'暂无验证记录';
@@ -359,7 +484,7 @@ function copyKeys(){
 
 /* ===== 卡密 ===== */
 function statusTag(s){const m={unused:'未激活',active:'使用中',banned:'已封禁',expired:'已过期'};
-  return '<span class="badge '+s+'">'+(m[s]||s)+'</span>'}
+  return '<span class="state st-'+s+'"><i class="dot"></i>'+(m[s]||s)+'</span>'}
 async function loadCards(){
   const r=await api('/admin/cards',Object.assign({query:$('#q').value,status:$('#fStatus').value},scope()));
   const tb=$('#cardsT tbody');tb.innerHTML='';SEL.clear();updateBatch();
@@ -377,11 +502,11 @@ async function loadCards(){
       '<td><details><summary>'+c.devices.length+'/'+c.max_devices+'</summary><div class="dev">'+devs+'</div></details></td>'+
       '<td class="muted">'+(c.last_seen_s||'-')+'</td><td class="muted">'+esc(c.note||'')+'</td>'+
       '<td>'+
-      '<button class="mini" onclick="ban(\''+c.card+'\','+!(c.status==='banned')+')">'+(c.status==='banned'?'解封':'封禁')+'</button> '+
-      '<button class="mini" onclick="unbind(\''+c.card+'\')">解绑</button> '+
-      '<button class="mini" onclick="extend(\''+c.card+'\')">续期</button> '+
-      '<button class="mini" onclick="setNote(\''+c.card+'\')">备注</button> '+
-      '<button class="mini danger" onclick="del(\''+c.card+'\')">删除</button>'+
+      '<button class="btn mini" onclick="ban(\''+c.card+'\','+!(c.status==='banned')+')">'+(c.status==='banned'?'解封':'封禁')+'</button> '+
+      '<button class="btn mini" onclick="unbind(\''+c.card+'\')">解绑</button> '+
+      '<button class="btn mini" onclick="extend(\''+c.card+'\')">续期</button> '+
+      '<button class="btn mini" onclick="setNote(\''+c.card+'\')">备注</button> '+
+      '<button class="btn mini danger" onclick="del(\''+c.card+'\')">删除</button>'+
       '</td>';
     frag.appendChild(tr);
   }
@@ -413,14 +538,14 @@ async function del(card){
 async function renderApps(){
   await loadApps();
   $('#appsList').innerHTML=APPS.map(a=>
-    '<div class="appcard"><span class="dot" style="background:'+(a.enabled?'var(--acc2)':'var(--sub)')+'"></span>'+
+    '<div class="approw tickframe dim"><span class="dot" style="background:'+(a.enabled?'var(--color-live)':'var(--color-rule-2)')+'"></span>'+
     '<b>'+esc(a.name)+'</b>'+
     '<span class="muted mono">id='+a.id+' · ks '+a.ks.slice(0,10)+'… · gk '+a.gk.slice(0,10)+'…</span>'+
     '<span class="muted">卡密 '+a.cards+' 张 / 使用中 '+a.active+'</span>'+
     '<span style="flex:1"></span>'+
-    '<button class="mini" onclick="rotateApp('+a.id+')">换密钥</button>'+
-    '<button class="mini" onclick="toggleApp('+a.id+','+(a.enabled?0:1)+')">'+(a.enabled?'停用':'启用')+'</button>'+
-    '<button class="mini" onclick="copyKeysOf('+a.id+')">复制密钥</button></div>').join('');
+    '<button class="btn mini" onclick="rotateApp('+a.id+')">换密钥</button>'+
+    '<button class="btn mini" onclick="toggleApp('+a.id+','+(a.enabled?0:1)+')">'+(a.enabled?'停用':'启用')+'</button>'+
+    '<button class="btn mini" onclick="copyKeysOf('+a.id+')">复制密钥</button></div>').join('');
 }
 async function createApp(){
   const name=$('#newAppName').value.trim();
@@ -454,7 +579,7 @@ async function loadLogs(){
     tr.innerHTML='<td class="muted">'+fmtT(l.ts)+'</td><td class="mono">'+esc(l.card||'-')+'</td>'+
       '<td class="mono muted">'+esc(l.device||'-')+'</td>'+
       '<td class="mono muted">'+esc(l.ip||'')+'</td><td>'+esc(l.action)+'</td>'+
-      '<td>'+(l.ok?'<span style="color:var(--acc2)">✓</span>':'<span style="color:var(--bad)">✗</span>')+'</td>'+
+      '<td>'+(l.ok?'<span style="color:var(--color-live)">●</span>':'<span style="color:var(--color-error)">×</span>')+'</td>'+
       '<td class="muted">'+esc(l.detail||'')+'</td>';
     frag.appendChild(tr);
   }
@@ -465,14 +590,16 @@ async function loadLogs(){
 async function boot(){
   let me;
   try{me=await(await fetch('/me',{credentials:'same-origin'})).json()}catch(e){showLogin();return}
-  if(!me.ok){showLogin();return}
-  $('#login').style.display='none';$('#app').style.display='flex';
+  if(!me.ok){showLogin();startCloud();return}
+  $('#login').classList.remove('on');if(_cloudRAF){cancelAnimationFrame(_cloudRAF);_cloudRAF=0}
+  $('#app').style.display='block';
   $('#whoami').textContent=me.user||'admin';
   await loadApps();
   CUR=APPS.length?String(APPS[0].id):"";
   $('#appSel').value=CUR;
   go('dash');
 }
+document.addEventListener('DOMContentLoaded',function(){ if($('#login').classList.contains('on')) startCloud(); });
 boot();
 </script>
 </body>
