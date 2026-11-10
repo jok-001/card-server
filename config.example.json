@@ -1,0 +1,13 @@
+{
+  "port": 8080,
+  "admin_token": "<随机 hex32，首次运行自动生成>",
+  "admin_user": "admin",
+  "admin_pass": "<格式 pbkdf2$200000$<salt>$<hash>，首次运行自动生成>",
+  "session_secret": "<随机 hex32>",
+  "ks": "<默认应用客户端签名密钥 hex16>",
+  "gk": "<默认应用响应门禁密钥 hex16>",
+  "app_secret": "<可选：客户端侧签名校验密钥，仅特定协议兼容时填>",
+  "build_key": "<可选：/key 脚本密钥下发密钥 hex32>",
+  "max_devices_default": 1,
+  "rate_limit_per_min": 120
+}

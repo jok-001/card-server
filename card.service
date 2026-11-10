@@ -1,0 +1,14 @@
+[Unit]
+Description=Card Server - multi-app card verification service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/card-server
+ExecStart=/usr/bin/python3 /opt/card-server/app.py
+Restart=always
+RestartSec=3
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

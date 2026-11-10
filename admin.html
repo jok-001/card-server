@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Card Server · 管理台</title>
+<style>
+:root{
+  --bg:#0B0F1C;--side:#0D1322;--panel:#121A2B;--panel2:#0F1626;
+  --line:#1E2A40;--line2:#2A3A57;--tx:#E8EEF9;--sub:#7C89A3;
+  --acc:#7C5CFF;--acc2:#22D3A7;--bad:#F0525F;--warn:#F0B429;
+  --grad:linear-gradient(135deg,#7C5CFF,#5B8CFF);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font:14px/1.6 system-ui,"Segoe UI","Microsoft YaHei",sans-serif;overflow:hidden}
+button{font:inherit;cursor:pointer;border:1px solid var(--line2);background:#182236;color:var(--tx);border-radius:8px;padding:7px 14px;transition:.15s}
+button:hover{border-color:var(--acc);background:#1D2A44}
+button.pri{background:var(--grad);border:none;font-weight:600}
+button.pri:hover{filter:brightness(1.12)}
+button.danger{background:#3A1A22;border-color:#6B2A31;color:#FF9DA5}
+button.danger:hover{background:#522028}
+button.mini{padding:3px 9px;font-size:12px;border-radius:6px}
+input,select,textarea{font:inherit;background:#0D1424;border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:8px 10px;outline:none;transition:.15s}
+input:focus,select:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0 2px #7C5CFF22}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:#25314B;border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ===== 登录 ===== */
+#login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(1200px 700px at 20% -10%,#2A1B66 0%,transparent 60%),radial-gradient(1000px 600px at 110% 110%,#0E3B54 0%,transparent 55%),var(--bg);z-index:50}
+#login .box{width:360px;background:#101828EE;border:1px solid var(--line);border-radius:16px;padding:30px 26px;backdrop-filter:blur(6px);animation:in .3s ease}
+#login h2{font-size:19px;margin-bottom:4px}
+#login .sub{color:var(--sub);font-size:12px;margin-bottom:18px}
+#login input{width:100%;margin-bottom:10px}
+#login button{width:100%;padding:10px}
+#lerr{color:var(--bad);font-size:12px;min-height:18px;margin-bottom:4px}
+@keyframes in{from{opacity:0;transform:translateY(14px) scale(.98)}}
+
+/* ===== 主框架 ===== */
+#app{display:none;height:100vh}
+#side{position:fixed;left:0;top:0;bottom:0;width:212px;background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:18px 12px;z-index:10}
+.logo{display:flex;align-items:center;gap:10px;padding:4px 10px 18px}
+.logo .mark{width:34px;height:34px;border-radius:9px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
+.logo b{font-size:15px}
+.logo i{font-style:normal;font-size:10px;color:var(--sub);display:block}
+.nav{display:flex;flex-direction:column;gap:4px;flex:1}
+.nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;color:var(--sub);cursor:pointer;text-decoration:none;transition:.15s;font-size:14px}
+.nav a svg{width:17px;height:17px;flex:none}
+.nav a:hover{color:var(--tx);background:#151E33}
+.nav a.on{color:#fff;background:var(--grad);box-shadow:0 4px 14px #7C5CFF44;font-weight:600}
+.side-foot{border-top:1px solid var(--line);padding-top:12px}
+#main{margin-left:212px;height:100vh;display:flex;flex-direction:column}
+#topbar{display:flex;align-items:center;gap:12px;padding:14px 22px;border-bottom:1px solid var(--line);background:var(--side)}
+#ptitle{font-size:16px;font-weight:700}
+#topbar .sp{flex:1}
+select.mini{padding:6px 10px;font-size:13px}
+#content{flex:1;overflow:auto;padding:18px 22px 30px}
+
+/* ===== 通用组件 ===== */
+.page{display:none}
+.page.on{display:block;animation:pin .22s ease}
+@keyframes pin{from{opacity:0;transform:translateY(10px)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+.panel h3{font-size:13px;color:var(--sub);font-weight:600;margin-bottom:12px;letter-spacing:.5px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.muted{color:var(--sub);font-size:12px}
+.mono{font-family:Consolas,monospace}
+/* 统计瓦片 */
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.stat{background:linear-gradient(180deg,#151E33,#111828);border:1px solid var(--line);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden}
+.stat b{display:block;font-size:26px;font-weight:700;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat i{font-style:normal;color:var(--sub);font-size:12px}
+.stat::after{content:"";position:absolute;right:-14px;top:-14px;width:56px;height:56px;border-radius:50%;background:var(--acc);opacity:.08}
+/* 表格 */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:var(--sub);font-weight:600;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line2);white-space:nowrap;position:sticky;top:0;background:var(--panel);z-index:2}
+td{padding:8px 10px;border-bottom:1px solid #16203A;white-space:nowrap}
+tr:hover td{background:#151E33}
+.twrap{border:1px solid var(--line);border-radius:12px;overflow:auto;max-height:56vh}
+.badge{display:inline-block;padding:1px 9px;border-radius:20px;font-size:12px}
+.badge.unused{background:#0F2A1E;color:var(--acc2)}
+.badge.active{background:#171F3D;color:#8FA6FF}
+.badge.banned{background:#3A1A22;color:#FF9DA5}
+.badge.expired{background:#332A12;color:var(--warn)}
+details summary{cursor:pointer;color:#9FB4FF;font-size:12px}
+.dev{font-size:12px;color:var(--sub);padding:4px 0 2px 8px}
+/* 批量条 */
+#batch{display:none;margin:10px 0;padding:9px 12px;background:#161F35;border:1px solid var(--line2);border-radius:10px}
+#batch b{color:var(--acc)}
+/* 输出框 */
+#keysOut{margin-top:12px;background:#0D1424;border:1px dashed var(--line2);border-radius:10px;padding:12px;white-space:pre;font-family:Consolas,monospace;font-size:13px;display:none;max-height:220px;overflow:auto}
+/* 应用卡 */
+.appcard{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.appcard .dot{width:9px;height:9px;border-radius:50%}
+.appcard b{font-size:14px}
+#toast{position:fixed;top:18px;right:18px;background:var(--grad);color:#fff;padding:9px 18px;border-radius:10px;display:none;z-index:99;font-weight:600;box-shadow:0 8px 24px #0007}
+label.ck{display:flex;align-items:center;gap:6px;color:var(--sub);font-size:13px;cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- 登录 -->
+<div id="login">
+  <div class="box">
+    <h2>Card Server</h2>
+    <div class="sub">多应用卡密验证系统 · 管理台</div>
+    <div id="lerr"></div>
+    <input id="lu" placeholder="用户名" autocomplete="username">
+    <input id="lp" type="password" placeholder="密码" autocomplete="current-password" onkeydown="if(event.key=='Enter')doLogin()">
+    <button class="pri" onclick="doLogin()">登 录</button>
+  </div>
+</div>
+
+<!-- 主界面 -->
+<div id="app">
+  <div id="side">
+    <div class="logo"><div class="mark">CS</div><div><b>Card Server</b><i>多应用卡密系统</i></div></div>
+    <div class="nav" id="nav">
+      <a data-p="dash" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>总览</a>
+      <a data-p="cards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>卡密</a>
+      <a data-p="issue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>发卡</a>
+      <a data-p="apps"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4.5v11L12 22l-8-4.5v-11z"/><path d="M12 11l8-4.5M12 11v11M12 11L4 6.5"/></svg>应用</a>
+      <a data-p="logs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>日志</a>
+    </div>
+    <div class="side-foot">
+      <div class="muted" style="padding:0 10px 8px" id="whoami"></div>
+      <a onclick="logout()" style="display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;color:var(--sub);cursor:pointer">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>退出登录
+      </a>
+    </div>
+  </div>
+  <div id="main">
+    <div id="topbar">
+      <span id="ptitle">总览</span>
+      <span class="sp"></span>
+      <span class="muted">应用范围</span>
+      <select id="appSel" class="mini" style="min-width:180px" onchange="onAppSwitch()"></select>
+    </div>
+    <div id="content">
+
+      <!-- 总览 -->
+      <div class="page on" id="p-dash">
+        <div class="stats" id="stats"></div>
+        <div class="grid2" style="margin-top:16px">
+          <div class="panel">
+            <h3>快捷操作</h3>
+            <div class="row">
+              <button class="pri" onclick="go('issue')">批量发卡</button>
+              <button onclick="go('apps')">新建应用</button>
+              <button onclick="go('logs')">查看日志</button>
+            </div>
+            <div class="muted" style="margin-top:10px">提示：未激活卡不计时，用户首次验证成功才开始计算有效期。</div>
+          </div>
+          <div class="panel">
+            <h3>最近验证</h3>
+            <div id="recent" class="muted">加载中…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 卡密 -->
+      <div class="page" id="p-cards">
+        <div class="panel">
+          <div class="row">
+            <input id="q" placeholder="搜索卡密 / 备注 / 设备号" style="width:260px" onkeydown="if(event.key=='Enter')loadCards()">
+            <select id="fStatus" onchange="loadCards()">
+              <option value="">全部状态</option>
+              <option value="unused">未激活</option>
+              <option value="active">使用中</option>
+              <option value="banned">已封禁</option>
+              <option value="expired">已过期</option>
+            </select>
+            <button class="pri" onclick="loadCards()">搜索 / 刷新</button>
+            <span class="muted" id="cardsInfo"></span>
+          </div>
+          <div id="batch" class="row">
+            <span>已选 <b id="selN">0</b> 张：</span>
+            <button class="mini" onclick="batchOp('ban',true)">批量封禁</button>
+            <button class="mini" onclick="batchOp('ban',false)">批量解封</button>
+            <button class="mini" onclick="batchOp('unbind')">批量解绑</button>
+            <button class="mini danger" onclick="batchOp('delete')">批量删除</button>
+            <span class="muted">删除不可恢复；临时停用请用封禁</span>
+          </div>
+          <div class="twrap" style="margin-top:12px">
+            <table id="cardsT">
+              <thead><tr>
+                <th style="width:34px"><input type="checkbox" id="selAll" onchange="toggleAll(this)"></th>
+                <th>卡密</th><th id="thApp" style="display:none">应用</th><th>类型</th><th>状态</th><th>到期时间</th><th>设备</th><th>最后使用</th><th>备注</th><th>操作</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 发卡 -->
+      <div class="page" id="p-issue">
+        <div class="panel">
+          <h3>批量发卡</h3>
+          <div class="row">
+            <div><div class="muted" style="margin-bottom:4px">卡类型</div>
+              <select id="fDuration">
+                <option value="1">日卡 (1天)</option>
+                <option value="7">周卡 (7天)</option>
+                <option value="30" selected>月卡 (30天)</option>
+                <option value="90">季卡 (90天)</option>
+                <option value="365">年卡 (365天)</option>
+                <option value="0">永久卡</option>
+              </select></div>
+            <div><div class="muted" style="margin-bottom:4px">数量 (1-500)</div>
+              <input id="fCount" type="number" value="10" min="1" max="500" style="width:90px"></div>
+            <div><div class="muted" style="margin-bottom:4px">每卡设备数</div>
+              <input id="fMaxDev" type="number" value="1" min="1" max="99" style="width:90px"></div>
+            <div><div class="muted" style="margin-bottom:4px">卡号前缀</div>
+              <input id="fPrefix" value="XM" size="6"></div>
+            <div style="flex:1;min-width:180px"><div class="muted" style="margin-bottom:4px">备注（渠道 / 客户）</div>
+              <input id="fNote" style="width:100%"></div>
+          </div>
+          <div class="row" style="margin-top:14px">
+            <button class="pri" onclick="issue()" id="btnIssue">生成卡密</button>
+            <span class="muted">未激活卡不计时，首次验证成功才开始计算有效期</span>
+          </div>
+        </div>
+        <div class="panel" id="issueOut" style="display:none">
+          <h3>生成结果 <button class="mini" onclick="copyKeys()">复制全部</button></h3>
+          <div id="keysOut"></div>
+        </div>
+      </div>
+
+      <!-- 应用 -->
+      <div class="page" id="p-apps">
+        <div class="panel">
+          <h3>新建应用（独立卡密池，卡密互不共通）</h3>
+          <div class="row">
+            <input id="newAppName" placeholder="应用名称，如：某某助手" style="width:240px" onkeydown="if(event.key=='Enter')createApp()">
+            <button class="pri" onclick="createApp()">创建</button>
+            <span class="muted">自动生成独立 ks/gk；客户端集成见 SDK 文档</span>
+          </div>
+        </div>
+        <div id="appsList"></div>
+        <div class="muted" style="margin-top:6px">换密钥（rotate）后该应用已打包的旧客户端立即失效，用新 ks/gk 重新打包分发。</div>
+      </div>
+
+      <!-- 日志 -->
+      <div class="page" id="p-logs">
+        <div class="panel">
+          <div class="row">
+            <button class="pri" onclick="loadLogs()">刷新</button>
+            <label class="ck"><input type="checkbox" id="logsAll" onchange="loadLogs()"> 全部应用</label>
+            <span class="muted">最近 200 条</span>
+          </div>
+          <div class="twrap" style="margin-top:12px">
+            <table id="logsT">
+              <thead><tr><th>时间</th><th>卡密</th><th>设备</th><th>IP</th><th>动作</th><th>结果</th><th>详情</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+let APPS=[], CUR="";   // CUR: 应用id 字符串，"" = 全部应用
+const SEL=new Set();
+
+function esc(s){return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;').replace(/"/g,'&quot;')}
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',2400)}
+function fmtT(ts){if(!ts)return '-';const d=new Date(ts*1000);return d.toLocaleString('zh-CN',{hour12:false})}
+
+async function api(path,body){
+  const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:body?JSON.stringify(body):'{}',credentials:'same-origin'});
+  if(r.status===401){showLogin();throw new Error('unauthorized')}
+  const j=await r.json();
+  if(j&&j.error){toast(j.error);throw new Error(j.error)}
+  return j;
+}
+
+/* ===== 登录 ===== */
+function showLogin(){$('#login').style.display='flex';$('#app').style.display='none'}
+async function doLogin(){
+  $('#lerr').textContent='';
+  const r=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({u:$('#lu').value.trim(),p:$('#lp').value}),credentials:'same-origin'});
+  const j=await r.json().catch(()=>({}));
+  if(r.ok&&j.ok){$('#lp').value='';boot()}else{$('#lerr').textContent=j.error||('登录失败 '+r.status)}
+}
+async function logout(){await fetch('/logout',{method:'POST',credentials:'same-origin'});showLogin()}
+
+/* ===== 页面路由 ===== */
+const TITLES={dash:'总览',cards:'卡密管理',issue:'批量发卡',apps:'应用管理',logs:'验证日志'};
+function go(p){
+  document.querySelectorAll('.page').forEach(e=>e.classList.remove('on'));
+  $('#p-'+p).classList.add('on');
+  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.p===p));
+  $('#ptitle').textContent=TITLES[p];
+  if(p==='dash')loadDash();
+  if(p==='cards')loadCards();
+  if(p==='apps')renderApps();
+  if(p==='logs')loadLogs();
+}
+document.querySelectorAll('#nav a').forEach(a=>a.onclick=()=>go(a.dataset.p));
+
+/* ===== 应用范围 ===== */
+async function loadApps(){
+  const r=await api('/admin/apps');
+  APPS=r.apps;
+  const sel=$('#appSel');
+  sel.innerHTML='<option value="">全部应用</option>'+APPS.map(a=>
+    '<option value="'+a.id+'">'+esc(a.name)+(a.enabled?'':'（停用）')+'</option>').join('');
+  sel.value=CUR;
+}
+function onAppSwitch(){CUR=$('#appSel').value;go(document.querySelector('.page.on').id.replace('p-',''))}
+function scope(){return CUR?{app_id:+CUR}:{}}
+
+/* ===== 总览 ===== */
+function tile(n,label){return '<div class="stat"><b>'+n+'</b><i>'+label+'</i></div>'}
+async function loadDash(){
+  const s=await api('/admin/stat',scope());
+  $('#stats').innerHTML=
+    tile(s.total,'卡密总数')+tile(s.by_status.active||0,'使用中')+tile(s.by_status.unused||0,'未激活')+
+    tile(s.by_status.banned||0,'已封禁')+tile(s.devices,'绑定设备')+tile(s.logins_24h,'24h 验证');
+  const lg=await api('/admin/logs',Object.assign({limit:8},scope()));
+  $('#recent').innerHTML=lg.logs.length?lg.logs.map(l=>
+    '<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #16203A">'+
+    '<span style="color:'+(l.ok?'var(--acc2)':'var(--bad)')+'">'+(l.ok?'✓':'✗')+'</span>'+
+    '<span class="mono" style="flex:1">'+esc(l.card||'-')+'</span>'+
+    '<span class="muted">'+esc(l.action)+'</span>'+
+    '<span class="muted">'+fmtT(l.ts)+'</span></div>').join(''):'暂无验证记录';
+}
+
+/* ===== 发卡 ===== */
+async function issue(){
+  if(!CUR){toast('请先在右上角选择具体应用');return}
+  const btn=$('#btnIssue');btn.disabled=true;btn.textContent='生成中…';
+  try{
+    const r=await api('/admin/issue',{duration_days:+$('#fDuration').value,count:+$('#fCount').value,
+      max_devices:+$('#fMaxDev').value,prefix:$('#fPrefix').value,note:$('#fNote').value,app_id:+CUR});
+    $('#issueOut').style.display='block';
+    $('#keysOut').textContent=r.cards.join('\n');
+    toast('已生成 '+r.cards.length+' 张'+r.type_cn);
+    loadDash();
+  }catch(e){}
+  btn.disabled=false;btn.textContent='生成卡密';
+}
+function copyKeys(){
+  const t=$('#keysOut').textContent;
+  navigator.clipboard.writeText(t).then(()=>toast('已复制到剪贴板'),()=>{
+    const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');ta.remove();toast('已复制');
+  });
+}
+
+/* ===== 卡密 ===== */
+function statusTag(s){const m={unused:'未激活',active:'使用中',banned:'已封禁',expired:'已过期'};
+  return '<span class="badge '+s+'">'+(m[s]||s)+'</span>'}
+async function loadCards(){
+  const r=await api('/admin/cards',Object.assign({query:$('#q').value,status:$('#fStatus').value},scope()));
+  const tb=$('#cardsT tbody');tb.innerHTML='';SEL.clear();updateBatch();
+  $('#cardsInfo').textContent='共 '+r.cards.length+' 张（最多显示 500）';
+  $('#thApp').style.display=CUR?'none':'table-cell';
+  const frag=document.createDocumentFragment();
+  for(const c of r.cards){
+    const tr=document.createElement('tr');
+    const devs=c.devices.map(d=>'• '+esc(d.device_id)+' <span class="muted">('+fmtT(d.last_seen)+')</span>').join('<br>')||'<span class="muted">未绑定</span>';
+    tr.innerHTML='<td><input type="checkbox" class="rowck" data-card="'+c.card+'" onchange="rowck(this)"></td>'+
+      '<td class="mono">'+esc(c.card)+'</td>'+
+      (CUR?'':'<td class="muted">'+esc(c.app_name)+'</td>')+
+      '<td>'+esc(c.type_cn)+'</td><td>'+statusTag(c.status)+'</td>'+
+      '<td>'+(c.expire_at>0?c.expire_at_s:'永久')+'</td>'+
+      '<td><details><summary>'+c.devices.length+'/'+c.max_devices+'</summary><div class="dev">'+devs+'</div></details></td>'+
+      '<td class="muted">'+(c.last_seen_s||'-')+'</td><td class="muted">'+esc(c.note||'')+'</td>'+
+      '<td>'+
+      '<button class="mini" onclick="ban(\''+c.card+'\','+!(c.status==='banned')+')">'+(c.status==='banned'?'解封':'封禁')+'</button> '+
+      '<button class="mini" onclick="unbind(\''+c.card+'\')">解绑</button> '+
+      '<button class="mini" onclick="extend(\''+c.card+'\')">续期</button> '+
+      '<button class="mini" onclick="setNote(\''+c.card+'\')">备注</button> '+
+      '<button class="mini danger" onclick="del(\''+c.card+'\')">删除</button>'+
+      '</td>';
+    frag.appendChild(tr);
+  }
+  tb.appendChild(frag);
+}
+function updateBatch(){$('#selN').textContent=SEL.size;$('#batch').style.display=SEL.size?'flex':'none'}
+function rowck(c){c.checked?SEL.add(c.dataset.card):SEL.delete(c.dataset.card);updateBatch()}
+function toggleAll(cb){document.querySelectorAll('.rowck').forEach(c=>{c.checked=cb.checked;cb.checked?SEL.add(c.dataset.card):SEL.delete(c.dataset.card)});updateBatch()}
+async function batchOp(op,arg){
+  const cards=[...SEL];
+  const names={ban:arg?'批量封禁':'批量解封',unbind:'批量解绑',delete:'批量删除'};
+  if(!confirm(names[op]+' '+cards.length+' 张卡密？'+(op==='delete'?'\n删除不可恢复！':'')))return;
+  const body={cards};if(op==='ban')body.banned=arg;
+  const r=await api('/admin/card/'+op,body);
+  toast('完成 '+r.ok+' 张'+(r.missing&&r.missing.length?('，'+r.missing.length+' 张不存在'):''));
+  SEL.clear();updateBatch();loadCards();loadDash();
+}
+async function ban(card,toBan){if(!confirm((toBan?'封禁':'解封')+' '+card+'？'))return;await api('/admin/card/ban',{cards:[card],banned:toBan});toast('完成');loadCards();loadDash()}
+async function unbind(card){if(!confirm('解绑 '+card+' 的全部设备？'))return;await api('/admin/card/unbind',{cards:[card]});toast('完成');loadCards()}
+async function extend(card){const d=prompt('续期天数：','30');if(!d)return;const r=await api('/admin/card/extend',{card,days:+d});toast('到期：'+r.expire_at);loadCards()}
+async function setNote(card){const n=prompt('备注：','');if(n===null)return;await api('/admin/card/note',{card,note:n});loadCards()}
+async function del(card){
+  if(!confirm('彻底删除 '+card+'？\n\n激活中的卡删除后立即失效，绑定记录一并清除，不可恢复！\n（临时停用请用「封禁」）'))return;
+  await api('/admin/card/delete',{cards:[card]});
+  toast('已删除');loadCards();loadDash();
+}
+
+/* ===== 应用 ===== */
+async function renderApps(){
+  await loadApps();
+  $('#appsList').innerHTML=APPS.map(a=>
+    '<div class="appcard"><span class="dot" style="background:'+(a.enabled?'var(--acc2)':'var(--sub)')+'"></span>'+
+    '<b>'+esc(a.name)+'</b>'+
+    '<span class="muted mono">id='+a.id+' · ks '+a.ks.slice(0,10)+'… · gk '+a.gk.slice(0,10)+'…</span>'+
+    '<span class="muted">卡密 '+a.cards+' 张 / 使用中 '+a.active+'</span>'+
+    '<span style="flex:1"></span>'+
+    '<button class="mini" onclick="rotateApp('+a.id+')">换密钥</button>'+
+    '<button class="mini" onclick="toggleApp('+a.id+','+(a.enabled?0:1)+')">'+(a.enabled?'停用':'启用')+'</button>'+
+    '<button class="mini" onclick="copyKeysOf('+a.id+')">复制密钥</button></div>').join('');
+}
+async function createApp(){
+  const name=$('#newAppName').value.trim();
+  if(!name)return toast('请输入应用名');
+  const r=await api('/admin/app/create',{name});
+  toast('已创建：'+name);
+  $('#newAppName').value='';
+  renderApps();loadApps();
+}
+async function rotateApp(id){
+  if(!confirm('换密钥后该应用已打包的旧客户端将立即失效，确定？'))return;
+  const r=await api('/admin/app/rotate',{id});
+  prompt('新 ks（复制）：',r.ks);prompt('新 gk（复制）：',r.gk);
+  renderApps();
+}
+async function toggleApp(id,en){await api('/admin/app/update',{id,enabled:en});renderApps();loadApps()}
+async function copyKeysOf(id){
+  const a=APPS.find(x=>x.id===id);
+  prompt('ks：',a.ks);prompt('gk：',a.gk);
+}
+
+/* ===== 日志 ===== */
+async function loadLogs(){
+  const body={limit:200};
+  if(!$('#logsAll').checked)Object.assign(body,scope());
+  const r=await api('/admin/logs',body);
+  const tb=$('#logsT tbody');tb.innerHTML='';
+  const frag=document.createDocumentFragment();
+  for(const l of r.logs){
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td class="muted">'+fmtT(l.ts)+'</td><td class="mono">'+esc(l.card||'-')+'</td>'+
+      '<td class="mono muted">'+esc(l.device||'-')+'</td>'+
+      '<td class="mono muted">'+esc(l.ip||'')+'</td><td>'+esc(l.action)+'</td>'+
+      '<td>'+(l.ok?'<span style="color:var(--acc2)">✓</span>':'<span style="color:var(--bad)">✗</span>')+'</td>'+
+      '<td class="muted">'+esc(l.detail||'')+'</td>';
+    frag.appendChild(tr);
+  }
+  tb.appendChild(frag);
+}
+
+/* ===== 启动 ===== */
+async function boot(){
+  let me;
+  try{me=await(await fetch('/me',{credentials:'same-origin'})).json()}catch(e){showLogin();return}
+  if(!me.ok){showLogin();return}
+  $('#login').style.display='none';$('#app').style.display='flex';
+  $('#whoami').textContent=me.user||'admin';
+  await loadApps();
+  CUR=APPS.length?String(APPS[0].id):"";
+  $('#appSel').value=CUR;
+  go('dash');
+}
+boot();
+</script>
+</body>
+</html>
